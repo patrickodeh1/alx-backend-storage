@@ -2,9 +2,8 @@
 SELECT
 	band_name,
 	CASE
-		WHEN formed IS NOT NULL AND (split IS NULL OR split >= formed)
-		THEN COALESCE(split, 2022) - formed
-		ELSE NULL
+		WHEN split IS NULL THEN - formed
+		ELSE split - formed
 	END AS lifespan
 FROM
 	metal_bands
