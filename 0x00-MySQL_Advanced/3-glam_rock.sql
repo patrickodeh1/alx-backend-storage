@@ -1,7 +1,11 @@
 -- SQL script to list all bands with Glam rock
+-- SQL script to list all bands with Glam rock
 SELECT 
     name AS band_name, 
-    IFNULL(YEAR('2022') - formed, 0) - IFNULL(YEAR('2022') - split, 0) AS lifespan
+    CASE 
+        WHEN split IS NOT NULL AND split > 0 THEN split - formed  -- Band has split
+        ELSE 2022 - formed  -- Band is still active (assumed current year is 2022)
+    END AS lifespan
 FROM 
     metal_bands 
 WHERE 
