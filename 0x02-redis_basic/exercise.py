@@ -87,3 +87,18 @@ class Cache:
         inputs = self._redis.lrange(method_name + ":inputs", 0, -1)
         outputs = self._redis.lrange(method_name + ":outputs", 0, -1)
         return inputs, outputs
+
+
+def replay(method: Callable):
+    """
+    Displays the history of calls of a particular function.
+    """
+    input_key = method.__qualname__ + ":inputs"
+    output_key = method.__qualname__ + ":outputs"
+    inputs = method.__self__._redis.lrange(input_key, 0, -1)
+    outputs = method.__self__._redis.lrange(output_key, 0, -1)
+
+    call_count = len(inputs)
+    print(f"{method.__qualname__} was called {call_count} times:")
+    for input_args, output in zip(inputs, outputs):
+        print(f"{method.__qualname__}(*{input_args.decode('utf-8')}) -> {output.decode('utf-8')}")
