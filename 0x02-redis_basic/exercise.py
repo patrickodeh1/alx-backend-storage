@@ -3,8 +3,26 @@
 
 import redis
 import uuid
-from typing import Union, Callable, Optional
+from typing import Union, Callable
 import functools
+
+
+def call_history(method: Callable) -> Callable:
+    """
+    A decorator that stores the history of inputs and outputs for a function.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """Wrapper function that stores inputs and outputs in Redis."""
+        input_key = method.__qualname__ + ":inputs"
+        output_key = method.__qualname__ + ":outputs"
+        self._redis.rpush(input_key, str(args))
+        output = method(self, *args, **kwargs)
+        self._redis.rpush(output_key, str(output))
+
+        return output
+
+    return wrapper
 
 
 def count_calls(method: Callable) -> Callable:
@@ -27,6 +45,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """stores data in Redis with randomly generated key"""
@@ -60,3 +79,11 @@ class Cache:
         Retrieve an integer from Redis.
         """
         return self.get(key, lambda d: int(d))
+
+    def get_call_history(self, method_name: str):
+        """
+        Retrieve the call history (inputs and outputs) of a method from Redis.
+        """
+        inputs = self._redis.lrange(method_name + ":inputs", 0, -1)
+        outputs = self._redis.lrange(method_name + ":outputs", 0, -1)
+        return inputs, outputs
