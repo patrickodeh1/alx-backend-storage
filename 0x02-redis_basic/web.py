@@ -8,9 +8,10 @@ import functools
 
 r = redis.Redis()
 
+
 def cache_page(expiration: int = 10):
     """
-    Decorator to cache the result of a function call for a given expiration time.
+    Decorator to cache the result of a function call
     """
     def decorator(method: Callable) -> Callable:
         @functools.wraps(method)
@@ -24,6 +25,7 @@ def cache_page(expiration: int = 10):
             return result
         return wrapper
     return decorator
+
 
 @cache_page(expiration=10)
 def get_page(url: str) -> str:
